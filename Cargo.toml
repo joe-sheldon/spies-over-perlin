@@ -1,0 +1,10 @@
+[package]
+name = "spys-over-perlin"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = "0.15.1"
+bevy_panorbit_camera = "0.21.2"
+noise = "0.9.0"
+rand = "0.8.5"
