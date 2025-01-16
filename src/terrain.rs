@@ -29,10 +29,10 @@ pub fn generate_terrain_vertices(
     verts
 }
 
-pub fn generate_terrain_triangle_strip_from_vertices(
+pub fn generate_terrain_triangle_strips_from_vertices(
     divisions_x: i32,
     divisions_z: i32,
-) -> Result<Vec<u32>, String> {
+) -> Result<Vec<Vec<u32>>, String> {
     //
     // Grid is like this for a W4 H6 grid
     // ---------Strip 0--------------
@@ -56,7 +56,7 @@ pub fn generate_terrain_triangle_strip_from_vertices(
     // strip (1) tristrip:  10 15 11 16 12 17 13 18 14 19
     // strip (1) tristrip:  20 25 21 26 22 27 23 28 24 29
 
-    let mut vertices: Vec<u32> = Vec::new();
+    let mut strips: Vec<Vec<u32>> = Vec::new();
 
     if divisions_z % 2 != 0 {
         return Err("Z size of grid must be divisible by 2".to_string());
@@ -66,18 +66,20 @@ pub fn generate_terrain_triangle_strip_from_vertices(
     let n_verts_per_strip = 2 * divisions_x;
 
     for strip_idx in 0..n_strips {
+        let mut strip_verts: Vec<u32> = Vec::new();
         for strip_vertex_idx in 0..n_verts_per_strip {
             let mesh_vert_idx = match strip_vertex_idx % 2 {
                 0 => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x),
                 _ => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x) + divisions_x,
             };
 
-            vertices.push(mesh_vert_idx as u32);
+            strip_verts.push(mesh_vert_idx as u32);
             println!("Strip {} Vert {}: {}", strip_idx, strip_vertex_idx, mesh_vert_idx);
         }
+        strips.push(strip_verts);
     }
 
-    Ok(vertices)
+    Ok(strips)
 }
 
 fn compute_normals(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<Vec3> {
@@ -98,34 +100,44 @@ fn compute_normals(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<Vec3> {
     normals
 }
 
-pub fn generate_terrain_mesh(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Mesh {
+fn compute_line(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<u32> {
+    // This is to be determined how to best go about backfilling normals for each coordinate.
+    // This can be manually solved but there may be a way to automatically do it.
+    let mut line: Vec<u32> = Vec::new();
+
+    // let n_tris = 2 * divisions_x - 2;
+    // for tri in 0..n_tris {
+    //
+    // }
+
+    for indices in indices {
+        line.push(indices)
+    }
+
+
+    line
+}
+
+pub fn generate_terrain_mesh_strips(coordinates: &Vec<Vec3>, strips: &Vec<Vec<u32>>) -> Vec<Mesh> {
     // https://docs.rs/bevy/latest/bevy/render/prelude/struct.Mesh.html
-    for coord in coordinates.iter() {
-        println!("terrain generator coord: {:?}", coord);
+    let mut meshes: Vec<Mesh> = Vec::new();
+
+    for strip in strips {
+        // This is bad -- it's passing all the coordinates in to compute the strip. The triangle-
+        // strips vertices use the index from this list.
+        let normals = compute_normals(coordinates.clone(), strip.clone());
+        // let line = compute_line(coordinates.clone(), strip.clone());
+
+        let terrain_mesh = Mesh::new(TriangleStrip, RenderAssetUsages::default())
+            .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, coordinates.clone())
+            .with_inserted_attribute(
+                Mesh::ATTRIBUTE_NORMAL,
+                normals,
+            )
+            .with_inserted_indices(Indices::U32(strip.clone()));
+
+        meshes.push(terrain_mesh);
     }
 
-    for index in indices.iter() {
-        println!("terrain vert index: {:?}", index);
-    }
-
-    let normals = compute_normals(coordinates.clone(), indices.clone());
-
-    let terrain_mesh = Mesh::new(TriangleStrip, RenderAssetUsages::default())
-        .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, coordinates)
-        // .with_inserted_attribute(
-        //     Mesh::ATTRIBUTE_UV_0,
-        //     vec![
-        //         [0.0, 1.0],
-        //         [0.5, 0.0],
-        //         [1.0, 0.0],
-        //         [0.5, 1.0]
-        //     ],
-        // )
-        .with_inserted_attribute(
-            Mesh::ATTRIBUTE_NORMAL,
-            normals,
-        )
-        .with_inserted_indices(Indices::U32(indices));
-
-    terrain_mesh
+    meshes
 }
