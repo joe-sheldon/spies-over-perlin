@@ -1,5 +1,5 @@
 use bevy::asset::RenderAssetUsages;
-use bevy::math::{IVec3, Vec3};
+use bevy::math::{Vec3};
 use bevy::prelude::Mesh;
 use bevy::render::mesh::Indices;
 use bevy::render::mesh::PrimitiveTopology::TriangleStrip;
@@ -12,7 +12,7 @@ pub fn generate_terrain_vertices(
     divisions_x: i32,
     divisions_z: i32,
     seed: u32,
-) -> Vec<Vec3> {
+) -> Result<Vec<Vec3>, String> {
     let mut verts: Vec<Vec3> = Vec::new();
 
     let perlin = Perlin::new(seed);
@@ -26,7 +26,7 @@ pub fn generate_terrain_vertices(
         }
     }
 
-    verts
+    Ok(verts)
 }
 
 pub fn generate_terrain_triangle_strips_from_vertices(
@@ -100,34 +100,14 @@ fn compute_normals(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<Vec3> {
     normals
 }
 
-fn compute_line(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<u32> {
-    // This is to be determined how to best go about backfilling normals for each coordinate.
-    // This can be manually solved but there may be a way to automatically do it.
-    let mut line: Vec<u32> = Vec::new();
-
-    // let n_tris = 2 * divisions_x - 2;
-    // for tri in 0..n_tris {
-    //
-    // }
-
-    for indices in indices {
-        line.push(indices)
-    }
-
-
-    line
-}
-
-pub fn generate_terrain_mesh_strips(coordinates: &Vec<Vec3>, strips: &Vec<Vec<u32>>) -> Vec<Mesh> {
+pub fn generate_terrain_mesh_strips(coordinates: &Vec<Vec3>, strips: &Vec<Vec<u32>>) -> Result<Vec<Mesh>, String> {
     // https://docs.rs/bevy/latest/bevy/render/prelude/struct.Mesh.html
     let mut meshes: Vec<Mesh> = Vec::new();
 
     for strip in strips {
-        // This is bad -- it's passing all the coordinates in to compute the strip. The triangle-
-        // strips vertices use the index from this list.
+        // This is probably inefficient -- it's passing all the coordinates in to compute
+        // the strip. The triangle-strip's vertices use the index from this list.
         let normals = compute_normals(coordinates.clone(), strip.clone());
-        // let line = compute_line(coordinates.clone(), strip.clone());
-
         let terrain_mesh = Mesh::new(TriangleStrip, RenderAssetUsages::default())
             .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, coordinates.clone())
             .with_inserted_attribute(
@@ -139,5 +119,5 @@ pub fn generate_terrain_mesh_strips(coordinates: &Vec<Vec3>, strips: &Vec<Vec<u3
         meshes.push(terrain_mesh);
     }
 
-    meshes
+    Ok(meshes)
 }
