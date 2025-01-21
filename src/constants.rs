@@ -1,7 +1,7 @@
 pub(crate) const GRID_SIZE_X: f32 = 100.0;
 pub(crate) const GRID_SIZE_Z: f32 = 100.0;
-pub(crate) const GRID_SIZE_DIVISIONS_X: i32 = 32;
-pub(crate) const GRID_SIZE_DIVISIONS_Z: i32 = 32;
+pub(crate) const GRID_SIZE_DIVISIONS_X: u32 = 512;
+pub(crate) const GRID_SIZE_DIVISIONS_Z: u32 = 512;
 pub(crate) const GRID_HEIGHT_WATER: f32 = 4.0;
 pub(crate) const GRID_HEIGHT_MAX: f32 = 4.0;
 pub(crate) const GRID_CUBOID_SIZE_X: f32 = GRID_SIZE_X / GRID_SIZE_DIVISIONS_X as f32;

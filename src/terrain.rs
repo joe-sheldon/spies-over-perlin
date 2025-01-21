@@ -9,16 +9,16 @@ pub fn generate_terrain_vertices(
     size_x: f32,
     size_z: f32,
     max_y: f32,
-    divisions_x: i32,
-    divisions_z: i32,
+    divisions_x: u32,
+    divisions_z: u32,
     seed: u32,
 ) -> Result<Vec<Vec3>, String> {
     let mut verts: Vec<Vec3> = Vec::new();
 
     let perlin = Perlin::new(seed);
-    for zp in 0..(divisions_z + 1) {
-        let z = size_z * zp as f32 / divisions_z as f32;
-        for xp in 0..(divisions_x + 1) {
+    for zp in 0..divisions_z {
+        let z =  zp as f32 * size_z / divisions_z as f32;
+        for xp in 0..divisions_x {
             let x = size_x * xp as f32 / divisions_x as f32;
             let y = max_y * perlin.get([x as f64, z as f64]) as f32;
             let vert = Vec3::new(x, y, z);
@@ -30,8 +30,8 @@ pub fn generate_terrain_vertices(
 }
 
 pub fn generate_terrain_triangle_strips_from_vertices(
-    divisions_x: i32,
-    divisions_z: i32,
+    divisions_x: u32,
+    divisions_z: u32,
 ) -> Result<Vec<Vec<u32>>, String> {
     //
     // Grid is like this for a W4 H6 grid
@@ -67,15 +67,26 @@ pub fn generate_terrain_triangle_strips_from_vertices(
 
     for strip_idx in 0..n_strips {
         let mut strip_verts: Vec<u32> = Vec::new();
-        for strip_vertex_idx in 0..n_verts_per_strip {
-            let mesh_vert_idx = match strip_vertex_idx % 2 {
-                0 => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x),
-                _ => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x) + divisions_x,
-            };
 
-            strip_verts.push(mesh_vert_idx as u32);
-            println!("Strip {} Vert {}: {}", strip_idx, strip_vertex_idx, mesh_vert_idx);
+        let top_left_index = strip_idx * divisions_z;
+        let bottom_left_index = top_left_index + divisions_x;
+
+        for xIdx in 0..divisions_x {
+            strip_verts.push(top_left_index + xIdx);
+            strip_verts.push(bottom_left_index + xIdx);
         }
+
+
+        // for strip_vertex_idx in 0..n_verts_per_strip {
+        //     let mesh_vert_idx = match strip_vertex_idx % 2 {
+        //         0 => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x),
+        //         _ => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x) + divisions_x,
+        //     };
+        //
+        //     strip_verts.push(mesh_vert_idx as u32);
+        //     println!("Strip {} Vert {}: {}", strip_idx, strip_vertex_idx, mesh_vert_idx);
+        // }
+        println!("Strip {strip_idx}: {strip_verts:?}");
         strips.push(strip_verts);
     }
 
