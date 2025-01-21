@@ -74,7 +74,8 @@ pub fn generate_terrain_triangle_strips_from_vertices(
         return Err("Z size of grid must be divisible by 2".to_string());
     }
 
-    let n_strips = divisions_z / 2;
+    // FIXME Last strip would be handled differently. Skip for now
+    let n_strips = divisions_z - 1;
     let n_verts_per_strip = 2 * divisions_x;
 
     for strip_idx in 0..n_strips {
@@ -88,17 +89,6 @@ pub fn generate_terrain_triangle_strips_from_vertices(
             strip_verts.push(bottom_left_index + xIdx);
         }
 
-
-        // for strip_vertex_idx in 0..n_verts_per_strip {
-        //     let mesh_vert_idx = match strip_vertex_idx % 2 {
-        //         0 => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x),
-        //         _ => strip_vertex_idx / 2 + (2 * strip_idx * divisions_x) + divisions_x,
-        //     };
-        //
-        //     strip_verts.push(mesh_vert_idx as u32);
-        //     println!("Strip {} Vert {}: {}", strip_idx, strip_vertex_idx, mesh_vert_idx);
-        // }
-        println!("Strip {strip_idx}: {strip_verts:?}");
         strips.push(strip_verts);
     }
 

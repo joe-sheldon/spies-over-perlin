@@ -63,7 +63,8 @@ fn setup(
         let strip_mesh = commands
             .spawn((
                 Mesh3d(meshes.add(t_mesh)),
-                MeshMaterial3d(materials.add(rando_color())),
+                MeshMaterial3d(materials.add(Color::srgb(0.2, 0.8, 0.3))),
+                // MeshMaterial3d(materials.add(rando_color())),
                 Terrain,
             ))
             .id();
@@ -71,40 +72,24 @@ fn setup(
         strip_number += 1;
     }
 
-    // let perlin = Perlin::new(1);
     // let mut rng_target = rand::thread_rng();
-    // for xp in 0..GRID_SIZE_DIVISIONS {
-    //     let x = GRID_CUBOID_SIZE_X * xp as f32;
-    //     for zp in 0..GRID_SIZE_DIVISIONS {
-    //         let z = GRID_CUBOID_SIZE_Z * zp as f32;
-    //
-    //         let y = GRID_HEIGHT_MAX * perlin.get([x as f64, z as f64]) as f32;
-    //         commands.spawn((
-    //             Mesh3d(meshes.add(Cuboid::new(GRID_CUBOID_SIZE_X, y.abs(), GRID_CUBOID_SIZE_Z))),
-    //             MeshMaterial3d(materials.add(Color::srgb(0.2, 0.8, 0.3))),
-    //             Transform::from_translation(Vec3::new(x, y.abs() / 2.0, z)),
-    //             TerrainPoint
-    //         ));
-    //
-    //         let target_value: f32 = rng_target.gen();
-    //         if target_value < GRID_CHANCE_SPAWN_TARGET {
-    //             commands.spawn((
-    //                 Mesh3d(meshes.add(Sphere::new(GRID_CUBOID_SIZE_X / 2.0))),
-    //                 MeshMaterial3d(materials.add(Color::srgb(1.0, 0.2, 0.2))),
-    //                 Transform::from_translation(Vec3::new(x, y.abs() + GRID_CUBOID_SIZE_X / 2.0, z)),
-    //                 TargetBall
-    //             ));
-    //         }
-    //     }
+    // let location_samples: Vec<Vec3> = t_coords.iter().choose_multiple(&mut rng_target, GRID_TARGET_COUNT).iter().collect();
+    // for loc in location_samples {
+    //     commands.spawn((
+    //         Mesh3d(meshes.add(Sphere::new(GRID_TARGET_SIZE))),
+    //         MeshMaterial3d(materials.add(Color::srgb(1.0, 0.2, 0.2))),
+    //         Transform::from_translation(Vec3::new(loc.x, loc.y.abs() + GRID_TARGET_SIZE / 2.0, loc.z)),
+    //         TargetBall
+    //     ));
     // }
 
     // Water
-    // commands.spawn((
-    //     Mesh3d(meshes.add(Plane3d::default().mesh().size(GRID_SIZE_X, GRID_SIZE_Z))),
-    //     MeshMaterial3d(materials.add(Color::srgb(0.3, 0.3, 0.5))),
-    //     Transform::from_xyz(GRID_SIZE_X / 2.0, 0.0, GRID_SIZE_Z / 2.0),
-    //     Water,
-    // ));
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(GRID_SIZE_X, GRID_SIZE_Z))),
+        MeshMaterial3d(materials.add(Color::srgb(0.3, 0.3, 0.5))),
+        Transform::from_xyz(GRID_SIZE_X / 2.0, 0.0, GRID_SIZE_Z / 2.0),
+        Water,
+    ));
 
     // light
     commands.spawn((
