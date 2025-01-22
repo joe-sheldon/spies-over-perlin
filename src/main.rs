@@ -3,6 +3,7 @@ mod terrain;
 
 use bevy::prelude::*;
 use bevy::reflect::List;
+use bevy::tasks::futures_lite::StreamExt;
 use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
 use rand::prelude::*;
 
@@ -72,22 +73,27 @@ fn setup(
         strip_number += 1;
     }
 
-    // let mut rng_target = rand::thread_rng();
-    // let location_samples: Vec<Vec3> = t_coords.iter().choose_multiple(&mut rng_target, GRID_TARGET_COUNT).iter().collect();
-    // for loc in location_samples {
-    //     commands.spawn((
-    //         Mesh3d(meshes.add(Sphere::new(GRID_TARGET_SIZE))),
-    //         MeshMaterial3d(materials.add(Color::srgb(1.0, 0.2, 0.2))),
-    //         Transform::from_translation(Vec3::new(loc.x, loc.y.abs() + GRID_TARGET_SIZE / 2.0, loc.z)),
-    //         TargetBall
-    //     ));
-    // }
+    let mut rng_target = rand::thread_rng();
+
+    let mut n_targets_generated = 0;
+    while n_targets_generated < GRID_TARGET_COUNT {
+        let rand_loc = t_coords[rng_target.gen_range(0..t_coords.len())];
+        if rand_loc.y > (GRID_HEIGHT_WATER + GRID_TARGET_SIZE) {
+            commands.spawn((
+                Mesh3d(meshes.add(Sphere::new(GRID_TARGET_SIZE))),
+                MeshMaterial3d(materials.add(Color::srgb(1.0, 0.2, 0.2))),
+                Transform::from_translation(Vec3::new(rand_loc.x, rand_loc.y.abs() + (GRID_TARGET_SIZE / 2.0), rand_loc.z)),
+                TargetBall
+            ));
+            n_targets_generated += 1;
+        }
+    }
 
     // Water
     commands.spawn((
         Mesh3d(meshes.add(Plane3d::default().mesh().size(GRID_SIZE_X, GRID_SIZE_Z))),
         MeshMaterial3d(materials.add(Color::srgb(0.3, 0.3, 0.5))),
-        Transform::from_xyz(GRID_SIZE_X / 2.0, 0.0, GRID_SIZE_Z / 2.0),
+        Transform::from_xyz(GRID_SIZE_X / 2.0, GRID_HEIGHT_WATER, GRID_SIZE_Z / 2.0),
         Water,
     ));
 
