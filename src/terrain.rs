@@ -4,16 +4,16 @@ use bevy::prelude::Mesh;
 use bevy::render::mesh::Indices;
 use bevy::render::mesh::PrimitiveTopology::TriangleStrip;
 use noise::{NoiseFn, Perlin};
-use crate::constants::{GRID_NOISE_HIGH_FREQ_SCALE, GRID_NOISE_HIGH_PARTS, GRID_NOISE_LOW_FREQ_SCALE, GRID_NOISE_LOW_PARTS, GRID_NOISE_MID_FREQ_SCALE, GRID_NOISE_MID_PARTS};
+use crate::constants::{TERRAIN_HIGH_FREQ_NOISE_SCALE, WORLD_NOISE_RATIO_HIGH, TERRAIN_LOW_FREQ_NOISE_SCALE, WORLD_NOISE_RATIO_LOW, TERRAIN_MID_FREQ_NOISE_SCALE, WORLD_NOISE_RATIO_MID};
 
 pub fn generate_height(x: f32, y: f32, max_z: f32, seed: u32) -> f32 {
     let perlin = Perlin::new(seed);
 
-    let low_freq_height = GRID_NOISE_LOW_PARTS * perlin.get([(x / GRID_NOISE_LOW_FREQ_SCALE ) as f64, (y / GRID_NOISE_LOW_FREQ_SCALE) as f64]) as f32;
-    let mid_freq_height = GRID_NOISE_MID_PARTS * perlin.get([(x / GRID_NOISE_MID_FREQ_SCALE ) as f64, (y / GRID_NOISE_MID_FREQ_SCALE) as f64]) as f32;
-    let high_freq_height = GRID_NOISE_HIGH_PARTS * perlin.get([(x / GRID_NOISE_HIGH_FREQ_SCALE ) as f64, (y / GRID_NOISE_HIGH_FREQ_SCALE) as f64]) as f32;
+    let low_freq_height = WORLD_NOISE_RATIO_LOW * perlin.get([(x / TERRAIN_LOW_FREQ_NOISE_SCALE) as f64, (y / TERRAIN_LOW_FREQ_NOISE_SCALE) as f64]) as f32;
+    let mid_freq_height = WORLD_NOISE_RATIO_MID * perlin.get([(x / TERRAIN_MID_FREQ_NOISE_SCALE) as f64, (y / TERRAIN_MID_FREQ_NOISE_SCALE) as f64]) as f32;
+    let high_freq_height = WORLD_NOISE_RATIO_HIGH * perlin.get([(x / TERRAIN_HIGH_FREQ_NOISE_SCALE) as f64, (y / TERRAIN_HIGH_FREQ_NOISE_SCALE) as f64]) as f32;
 
-    let height = max_z * (low_freq_height + mid_freq_height + high_freq_height) / (GRID_NOISE_LOW_PARTS + GRID_NOISE_MID_PARTS + GRID_NOISE_HIGH_PARTS);
+    let height = max_z * (low_freq_height + mid_freq_height + high_freq_height) / (WORLD_NOISE_RATIO_LOW + WORLD_NOISE_RATIO_MID + WORLD_NOISE_RATIO_HIGH);
 
     height
 }
