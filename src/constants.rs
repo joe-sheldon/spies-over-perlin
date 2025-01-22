@@ -3,14 +3,14 @@ use bevy::color::Color;
 //
 // TERRAIN
 //
-pub(crate) const WORLD_SIZE_X: f32 = 100.0;
-pub(crate) const WORLD_SIZE_Z: f32 = 100.0;
-pub(crate) const WORLD_GRID_DIVISIONS_X: u32 = 256;
-pub(crate) const WORLD_GRID_DIVISIONS_Z: u32 = 256;
-pub(crate) const WORLD_MAX_HEIGHT: f32 = 8.0;
+pub(crate) const WORLD_SIZE_X: f32 = 1024.0;
+pub(crate) const WORLD_SIZE_Z: f32 = 1024.0;
+pub(crate) const WORLD_GRID_DIVISIONS_X: u32 = 512;
+pub(crate) const WORLD_GRID_DIVISIONS_Z: u32 = 512;
+pub(crate) const WORLD_MAX_HEIGHT: f32 = 12.0;
 // NOISE FREQUENCY SCALES -- HIGHER VALUE -- WIDER NOISE
-pub(crate) const TERRAIN_LOW_FREQ_NOISE_SCALE: f32 = 15.0;
-pub(crate) const TERRAIN_MID_FREQ_NOISE_SCALE: f32 = 8.0;
+pub(crate) const TERRAIN_LOW_FREQ_NOISE_SCALE: f32 = 200.0;
+pub(crate) const TERRAIN_MID_FREQ_NOISE_SCALE: f32 = 30.0;
 pub(crate) const TERRAIN_HIGH_FREQ_NOISE_SCALE: f32 = 5.0;
 // RATIO OF LOW - MID - HIGH FREQUENCY NOISE; NORMALIZED OVER SUM OF PARTS
 pub(crate) const WORLD_NOISE_RATIO_LOW: f32 = 5.0;

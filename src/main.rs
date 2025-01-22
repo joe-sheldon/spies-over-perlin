@@ -61,6 +61,7 @@ fn setup(
     for t_mesh in generate_terrain_mesh_strips(&t_coords, &t_strips).unwrap() {
         commands.spawn((
             Mesh3d(meshes.add(t_mesh)),
+            // MeshMaterial3d(materials.add(rando_color())),
             MeshMaterial3d(materials.add(TERRAIN_COLOR)),
             Terrain,
         ));
