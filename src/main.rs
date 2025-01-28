@@ -1,6 +1,8 @@
 mod constants;
 mod terrain;
 
+use std::f32::consts::PI;
+use std::ops::Mul;
 use bevy::prelude::*;
 use bevy::reflect::List;
 use bevy::tasks::futures_lite::StreamExt;
@@ -15,11 +17,35 @@ use constants::*;
 
 fn main() {
     App::new()
+        .init_resource::<Game>()
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
+        .add_systems(Update, (move_player))
         .run();
 }
+
+#[derive(Default)]
+struct Player {
+    entity: Option<Entity>,
+    loc: Vec3,
+    rot: Vec3, //roll pitch yaw
+    vel: Vec3,
+    afterburner: bool,
+    laser_on: bool,
+    move_cooldown: Timer,
+}
+
+#[derive(Resource, Default)]
+struct Game {
+    world_size_x: f32,
+    world_size_z: f32,
+    world_mesh: Vec<Vec3>,
+    player: Player,
+    camera_should_focus: Vec3,
+    camera_is_focus: Vec3,
+}
+
 
 #[derive(Component)]
 struct Water;
@@ -41,6 +67,7 @@ fn setup(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     asset_server: Res<AssetServer>,
+    mut game: ResMut<Game>
 ) {
 
     // Terrain
@@ -98,13 +125,76 @@ fn setup(
             .looking_at(Vec3::ZERO, Vec3::Y),
     ));
 
-    // pan orbit camera
+    // Player Setup
+    game.player.loc = Vec3::new(WORLD_SIZE_X / 2.0, PLAYER_INITIAL_HEIGHT, WORLD_SIZE_Z / 2.0);
+    game.player.rot = Vec3::new(0.0, 0.0, 0.0);
+    game.player.vel = Vec3::new(0.0, 0.0, 0.1);
+    game.player.move_cooldown = Timer::from_seconds(0.1, TimerMode::Once);
+    game.player.entity = Some(
+        commands
+            .spawn(
+                (
+                    Mesh3d(meshes.add(Sphere::new(PLAYER_SIZE))),
+                    MeshMaterial3d(materials.add(PLAYER_COLOR)),
+                    Transform::from_translation(game.player.loc),
+                ),
+            )
+            .id(),
+    );
+
+
+    // pan orbit camera around player
     commands.spawn((
-        Transform::from_translation(Vec3::new(
-            (WORLD_SIZE_X / 2.0),
-            (WORLD_MAX_HEIGHT + 5.0),
-            (WORLD_SIZE_Z / 2.0),
-        )),
+        Transform::from_translation(game.player.loc),
         PanOrbitCamera::default(),
     ));
+}
+
+fn move_player(
+    mut commands: Commands,
+    keyboard_input: Res<ButtonInput<KeyCode>>,
+    mut game: ResMut<Game>,
+    mut transforms: Query<&mut Transform>,
+    time: Res<Time>,
+) {
+    if game.player.move_cooldown.tick(time.delta()).finished() {
+        let mut turned = false;
+
+        if keyboard_input.pressed(KeyCode::ArrowUp) {
+            game.player.vel = game.player.vel.mul(1.1);
+            println!("Speed Up: {:?}", game.player.vel.x);
+        }
+        if keyboard_input.pressed(KeyCode::ArrowDown) {
+            game.player.vel = game.player.vel.mul(0.9);
+            println!("Slow Down: {:?}", game.player.vel.x);
+        };
+        if keyboard_input.pressed(KeyCode::ArrowRight) {
+            game.player.rot = Vec3::new(0.0, 0.0, game.player.rot.z + 2.0 * PI / 16.0);
+            println!("Turn Right: {:?}", game.player.rot);
+            turned = true;
+        }
+        if keyboard_input.pressed(KeyCode::ArrowLeft) {
+            game.player.rot = Vec3::new(0.0, 0.0, game.player.rot.z  - 2.0 * PI / 16.0);
+            println!("Turn Left: {:?}", game.player.rot);
+            turned = true;
+        }
+
+
+        // Apply rotation to vel vector
+        if (turned) {
+            game.player.vel = game.player.vel.mul(game.player.rot); // this is wrong
+        }
+
+        // Tick velocity up by vel vector
+        game.player.loc = game.player.loc + game.player.vel;
+
+        // move on the board
+        game.player.move_cooldown.reset();
+        *transforms.get_mut(game.player.entity.unwrap()).unwrap() = Transform {
+            translation: game.player.loc,
+            // rotation: Quat::from_rotation_y(rotation),
+            ..default()
+        };
+
+    }
 }

@@ -31,3 +31,10 @@ pub(crate) const TARGET_SIZE: f32 = 0.25;
 pub(crate) const TERRAIN_COLOR: Color = Color::srgb(0.2, 0.8, 0.3);
 pub(crate) const WATER_COLOR: Color = Color::srgb(0.2, 0.3, 0.5);
 pub(crate) const TARGET_COLOR: Color = Color::srgb(1.0, 0.2, 0.2);
+
+//
+// PLAYER INIT CONDITION
+//
+pub(crate) const PLAYER_COLOR: Color = Color::srgb(0.2, 0.2, 0.8);
+pub(crate) const PLAYER_SIZE: f32 = 0.5;
+pub(crate) const PLAYER_INITIAL_HEIGHT: f32 = 15.0;
