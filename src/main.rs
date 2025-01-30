@@ -41,6 +41,7 @@ struct Game {
     world_size_x: f32,
     world_size_z: f32,
     world_mesh: Vec<Vec3>,
+    city_centers: Vec<Vec3>,
     player: Player,
     camera_should_focus: Vec3,
     camera_is_focus: Vec3,
@@ -56,6 +57,9 @@ struct Terrain;
 #[derive(Component)]
 struct TargetBall;
 
+#[derive(Component)]
+struct Building;
+
 fn rando_color() -> Color {
     let mut rng = rand::thread_rng();
 
@@ -70,7 +74,9 @@ fn setup(
     mut game: ResMut<Game>
 ) {
 
-    // Terrain
+    //
+    // Terrain / Water
+    //
     let t_strips = generate_terrain_triangle_strips_from_vertices(
         WORLD_GRID_DIVISIONS_X,
         WORLD_GRID_DIVISIONS_Z,
@@ -84,7 +90,6 @@ fn setup(
         WORLD_GRID_DIVISIONS_Z,
         1,
     ).unwrap();
-
     for t_mesh in generate_terrain_mesh_strips(&t_coords, &t_strips).unwrap() {
         commands.spawn((
             Mesh3d(meshes.add(t_mesh)),
@@ -93,8 +98,53 @@ fn setup(
             Terrain,
         ));
     }
+    // Water
+    commands.spawn((
+        Mesh3d(meshes.add(Plane3d::default().mesh().size(WORLD_SIZE_X, WORLD_SIZE_Z))),
+        MeshMaterial3d(materials.add(WATER_COLOR)),
+        Transform::from_xyz(WORLD_SIZE_X / 2.0, WORLD_WATER_HEIGHT, WORLD_SIZE_Z / 2.0),
+        Water,
+    ));
 
-    //targets
+    //
+    // Cities (naive, need to do shift to ground level below spawn point and reject water-spawned
+    // buildings)
+    //
+    let mut rng_cities = rand::thread_rng();
+    let mut n_cities_generated = 0;
+    while n_cities_generated < CITY_COUNT {
+        let city_center = t_coords[rng_cities.gen_range(0..t_coords.len())];
+        if city_center.y > (WORLD_WATER_HEIGHT) {
+            game.city_centers.push(city_center);
+
+            let city_radius = rng_cities.gen_range(CITY_MIN_RADIUS..CITY_MAX_RADIUS);
+            let mut n_buildings_created = 0;
+            while n_buildings_created < CITY_MAX_BUILDING_COUNT {
+                // Not really a radius, but good enough for now
+                let building_x = city_center.x + rng_cities.gen_range(-city_radius..city_radius);
+                let building_z = city_center.z + rng_cities.gen_range(-city_radius..city_radius);
+                let building_width_x = rng_cities.gen_range(CITY_MIN_BUILDING_EDGE_SIZE..CITY_MAX_BUILDING_EDGE_SIZE);
+                let building_width_z = rng_cities.gen_range(CITY_MIN_BUILDING_EDGE_SIZE..CITY_MAX_BUILDING_EDGE_SIZE);
+                let building_height_y = rng_cities.gen_range(CITY_MIN_BUILDING_HEIGHT..CITY_MAX_BUILDING_HEIGHT);
+
+                commands.spawn((
+                    Mesh3d(meshes.add(Cuboid::new(building_width_x, building_height_y, building_width_z))),
+                    MeshMaterial3d(materials.add(BUILDING_COLOR)),
+                    Transform::from_translation(Vec3::new(building_x, city_center.y + (building_height_y / 2.0), building_z)),
+                    Building
+                ));
+
+                n_buildings_created += 1;
+            }
+
+
+            n_cities_generated += 1;
+        }
+    }
+
+    //
+    // Targets (just red balls at the moment spawned randomly at ground level world vertices)
+    //
     let mut rng_target = rand::thread_rng();
     let mut n_targets_generated = 0;
     while n_targets_generated < TARGET_COUNT {
@@ -110,15 +160,7 @@ fn setup(
         }
     }
 
-    // Water
-    commands.spawn((
-        Mesh3d(meshes.add(Plane3d::default().mesh().size(WORLD_SIZE_X, WORLD_SIZE_Z))),
-        MeshMaterial3d(materials.add(WATER_COLOR)),
-        Transform::from_xyz(WORLD_SIZE_X / 2.0, WORLD_WATER_HEIGHT, WORLD_SIZE_Z / 2.0),
-        Water,
-    ));
-
-    // light
+    // Lighting
     commands.spawn((
         DirectionalLight::default(),
         Transform::from_translation(Vec3::new(0.0, (WORLD_MAX_HEIGHT + 8.0), 0.0))
@@ -143,7 +185,7 @@ fn setup(
     );
 
 
-    // pan orbit camera around player
+    // Pan-Orbit camera around player (for now)
     commands.spawn((
         Transform::from_translation(game.player.loc),
         PanOrbitCamera::default(),

@@ -19,6 +19,21 @@ pub(crate) const WORLD_NOISE_RATIO_HIGH: f32 = 2.0;
 // WATER LEVEL (FLAT)
 pub(crate) const WORLD_WATER_HEIGHT: f32 = 1.0;
 
+
+//
+// CITIES (BASIC)
+//
+pub(crate) const CITY_COUNT: usize = 8;
+pub(crate) const CITY_MAX_BUILDING_COUNT: usize = 25;
+pub(crate) const CITY_MIN_RADIUS: f32 = 10.0;
+pub(crate) const CITY_MAX_RADIUS: f32 = 25.0;
+pub(crate) const CITY_MIN_BUILDING_HEIGHT: f32 = 1.0;
+pub(crate) const CITY_MAX_BUILDING_HEIGHT: f32 = 10.0;
+pub(crate) const CITY_MIN_BUILDING_EDGE_SIZE: f32 = 0.5;
+pub(crate) const CITY_MAX_BUILDING_EDGE_SIZE: f32 = 2.0;
+pub(crate) const BUILDING_COLOR: Color = Color::srgb(0.3, 0.3, 0.3);
+
+
 //
 // GROUND TARGETS (BASIC)
 //
