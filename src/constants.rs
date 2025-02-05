@@ -1,3 +1,4 @@
+use std::f32::consts::PI;
 use bevy::color::Color;
 
 //
@@ -51,5 +52,8 @@ pub(crate) const TARGET_COLOR: Color = Color::srgb(1.0, 0.2, 0.2);
 // PLAYER INIT CONDITION
 //
 pub(crate) const PLAYER_COLOR: Color = Color::srgb(0.2, 0.2, 0.8);
-pub(crate) const PLAYER_SIZE: f32 = 0.5;
+pub(crate) const PLAYER_SIZE: f32 = 5.0;
+pub(crate) const PLAYER_MIN_SPEED: f32 = 0.1;
+pub(crate) const PLAYER_MAX_SPEED: f32 = 0.8;
+pub(crate) const PLAYER_ROTATION_SPEED: f32 = PI/12.0;
 pub(crate) const PLAYER_INITIAL_HEIGHT: f32 = 15.0;

@@ -1,8 +1,8 @@
 mod constants;
 mod terrain;
 
-use std::f32::consts::PI;
-use std::ops::Mul;
+use std::ops::{Add, Mul};
+use bevy::math::Affine3A;
 use bevy::prelude::*;
 use bevy::reflect::List;
 use bevy::tasks::futures_lite::StreamExt;
@@ -29,8 +29,8 @@ fn main() {
 struct Player {
     entity: Option<Entity>,
     loc: Vec3,
-    rot: Vec3, //roll pitch yaw
-    vel: Vec3,
+    forward: Vec3,
+    vel: f32,
     afterburner: bool,
     laser_on: bool,
     move_cooldown: Timer,
@@ -169,8 +169,8 @@ fn setup(
 
     // Player Setup
     game.player.loc = Vec3::new(WORLD_SIZE_X / 2.0, PLAYER_INITIAL_HEIGHT, WORLD_SIZE_Z / 2.0);
-    game.player.rot = Vec3::new(0.0, 0.0, 0.0);
-    game.player.vel = Vec3::new(0.0, 0.0, 0.1);
+    game.player.forward = Vec3::Z;
+    game.player.vel = 0.2;
     game.player.move_cooldown = Timer::from_seconds(0.1, TimerMode::Once);
     game.player.entity = Some(
         commands
@@ -201,40 +201,40 @@ fn move_player(
 ) {
     if game.player.move_cooldown.tick(time.delta()).finished() {
         let mut turned = false;
+        let mut rot = Quat::IDENTITY;
 
         if keyboard_input.pressed(KeyCode::ArrowUp) {
-            game.player.vel = game.player.vel.mul(1.1);
-            println!("Speed Up: {:?}", game.player.vel.x);
+            if (game.player.vel < PLAYER_MAX_SPEED){
+                game.player.vel = game.player.vel + 0.1;
+                println!("Speed Up: {:?}", game.player.vel);
+            }
         }
         if keyboard_input.pressed(KeyCode::ArrowDown) {
-            game.player.vel = game.player.vel.mul(0.9);
-            println!("Slow Down: {:?}", game.player.vel.x);
+            if (game.player.vel > PLAYER_MIN_SPEED){
+                game.player.vel = game.player.vel - 0.1;
+                println!("Speed Down: {:?}", game.player.vel);
+            }
         };
         if keyboard_input.pressed(KeyCode::ArrowRight) {
-            game.player.rot = Vec3::new(0.0, 0.0, game.player.rot.z + 2.0 * PI / 16.0);
-            println!("Turn Right: {:?}", game.player.rot);
+            rot = Affine3A::from_rotation_y(-PLAYER_ROTATION_SPEED).to_scale_rotation_translation().1;
+            game.player.forward = rot * game.player.forward;
+            println!("Turn Right: {:?}", game.player.forward);
             turned = true;
         }
         if keyboard_input.pressed(KeyCode::ArrowLeft) {
-            game.player.rot = Vec3::new(0.0, 0.0, game.player.rot.z  - 2.0 * PI / 16.0);
-            println!("Turn Left: {:?}", game.player.rot);
+            rot = Affine3A::from_rotation_y(PLAYER_ROTATION_SPEED).to_scale_rotation_translation().1;
+            game.player.forward = rot * game.player.forward;
+            println!("Turn Left: {:?}", game.player.forward);
             turned = true;
         }
 
-
-        // Apply rotation to vel vector
-        if (turned) {
-            game.player.vel = game.player.vel.mul(game.player.rot); // this is wrong
-        }
-
         // Tick velocity up by vel vector
-        game.player.loc = game.player.loc + game.player.vel;
+        game.player.loc = game.player.loc.add(game.player.forward.mul(game.player.vel));
 
-        // move on the board
         game.player.move_cooldown.reset();
         *transforms.get_mut(game.player.entity.unwrap()).unwrap() = Transform {
             translation: game.player.loc,
-            // rotation: Quat::from_rotation_y(rotation),
+            rotation: rot,
             ..default()
         };
 
