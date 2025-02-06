@@ -21,7 +21,10 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
-        .add_systems(Update, (move_player))
+        .add_systems(Update, (
+            move_player,
+            update_camera,
+        ))
         .run();
 }
 
@@ -169,6 +172,8 @@ fn setup(
 
     // Player Setup
     game.player.loc = Vec3::new(WORLD_SIZE_X / 2.0, PLAYER_INITIAL_HEIGHT, WORLD_SIZE_Z / 2.0);
+    game.camera_should_focus = game.player.loc.clone();
+    game.camera_is_focus = game.player.loc.clone();
     game.player.forward = Vec3::Z;
     game.player.vel = 0.2;
     game.player.move_cooldown = Timer::from_seconds(0.1, TimerMode::Once);
@@ -185,11 +190,27 @@ fn setup(
     );
 
 
-    // Pan-Orbit camera around player (for now)
+    // // Pan-Orbit camera around player (for now)
+    // commands.spawn((
+    //     Transform::from_translation(game.player.loc),
+    //     PanOrbitCamera::default(),
+    // ));
+
     commands.spawn((
-        Transform::from_translation(game.player.loc),
-        PanOrbitCamera::default(),
+        Camera3d::default(),
+        Projection::Perspective(PerspectiveProjection {
+            fov: std::f32::consts::FRAC_PI_2, // 90 degrees in radians
+            ..default()
+        }),
+        Transform::from_xyz(
+            game.camera_is_focus.x,
+            game.camera_is_focus.y + 25.0,
+            game.camera_is_focus.z - 25.0
+        )
+            .looking_at(game.camera_is_focus, Vec3::Y),
     ));
+
+
 }
 
 fn move_player(
@@ -238,5 +259,34 @@ fn move_player(
             ..default()
         };
 
+        game.camera_should_focus = game.player.loc.clone();
+    }
+}
+
+fn update_camera(
+    time: Res<Time>,
+    mut game: ResMut<Game>,
+    mut transforms: ParamSet<(Query<&mut Transform, With<Camera3d>>, Query<&Transform>)>,
+) {
+
+    // let mut camera_motion = game.camera_is_focus - game.camera_should_focus;
+    // if camera_motion.length() > 0.2 {
+    //     camera_motion *= 2.0 * time.delta_secs();
+    //     game.camera_is_focus += camera_motion;
+    // } else {
+    //     game.camera_is_focus = game.camera_should_focus;
+    // }
+
+    game.camera_is_focus = game.camera_should_focus;
+
+
+    for mut transform in transforms.p0().iter_mut() {
+        *transform = transform.looking_at(game.camera_is_focus, Vec3::Y).with_translation(
+            Vec3::new(
+                game.camera_is_focus.x,
+                game.camera_is_focus.y + 25.0,
+                game.camera_is_focus.z - 25.0
+            )
+        );
     }
 }
