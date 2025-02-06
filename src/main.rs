@@ -18,6 +18,7 @@ use constants::*;
 fn main() {
     App::new()
         .init_resource::<Game>()
+        .insert_resource(ClearColor(SKY_COLOR))
         .add_plugins(DefaultPlugins)
         .add_plugins(PanOrbitCameraPlugin)
         .add_systems(Startup, setup)
@@ -26,6 +27,15 @@ fn main() {
             update_camera,
         ))
         .run();
+}
+
+struct LidarModule {
+    aim_at: Vec3,
+    loc_origin: Vec3,
+    loc_target: Vec3,
+    scan_x: u32,
+    scan_y: u32,
+    distance: f32,
 }
 
 #[derive(Default)]
@@ -37,6 +47,7 @@ struct Player {
     afterburner: bool,
     laser_on: bool,
     move_cooldown: Timer,
+    lidar: Option<LidarModule>,
 }
 
 #[derive(Resource, Default)]
@@ -175,7 +186,7 @@ fn setup(
     game.camera_should_focus = game.player.loc.clone();
     game.camera_is_focus = game.player.loc.clone();
     game.player.forward = Vec3::Z;
-    game.player.vel = 0.2;
+    game.player.vel = 5.0;
     game.player.move_cooldown = Timer::from_seconds(0.1, TimerMode::Once);
     game.player.entity = Some(
         commands

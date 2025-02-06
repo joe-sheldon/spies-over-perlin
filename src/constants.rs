@@ -2,6 +2,11 @@ use std::f32::consts::PI;
 use bevy::color::Color;
 
 //
+// GLOBAL
+//
+pub(crate) const SKY_COLOR: Color = Color::srgb(0.9, 0.9, 0.9);
+
+//
 // TERRAIN
 //
 pub(crate) const WORLD_SIZE_X: f32 = 1024.0;
@@ -54,8 +59,8 @@ pub(crate) const TARGET_COLOR: Color = Color::srgb(1.0, 0.2, 0.2);
 pub(crate) const PLAYER_COLOR: Color = Color::srgb(0.2, 0.2, 0.8);
 pub(crate) const PLAYER_SIZE: f32 = 5.0;
 pub(crate) const PLAYER_SPEED_INCREMENT: f32 = 1.0;
-pub(crate) const PLAYER_MIN_SPEED: f32 = 1.0;
-pub(crate) const PLAYER_MAX_SPEED: f32 = 8.0;
+pub(crate) const PLAYER_MIN_SPEED: f32 = 4.0;
+pub(crate) const PLAYER_MAX_SPEED: f32 = 12.0;
 pub(crate) const PLAYER_ROTATION_SPEED: f32 = PI/12.0;
 pub(crate) const PLAYER_INITIAL_HEIGHT: f32 = 15.0;
 pub(crate) const PLAYER_LIDAR_RASTER_SCAN_MAX_DISTANCE: f32 = 1500.0;
