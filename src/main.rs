@@ -226,13 +226,13 @@ fn move_player(
 
         if keyboard_input.pressed(KeyCode::ArrowUp) {
             if (game.player.vel < PLAYER_MAX_SPEED){
-                game.player.vel = game.player.vel + 0.1;
+                game.player.vel = game.player.vel + PLAYER_SPEED_INCREMENT;
                 println!("Speed Up: {:?}", game.player.vel);
             }
         }
         if keyboard_input.pressed(KeyCode::ArrowDown) {
             if (game.player.vel > PLAYER_MIN_SPEED){
-                game.player.vel = game.player.vel - 0.1;
+                game.player.vel = game.player.vel - PLAYER_SPEED_INCREMENT;
                 println!("Speed Down: {:?}", game.player.vel);
             }
         };
@@ -250,7 +250,7 @@ fn move_player(
         }
 
         // Tick velocity up by vel vector
-        game.player.loc = game.player.loc.add(game.player.forward.mul(game.player.vel));
+        game.player.loc = game.player.loc.add(game.player.forward.mul(game.player.vel * time.delta().as_secs_f32()));
 
         game.player.move_cooldown.reset();
         *transforms.get_mut(game.player.entity.unwrap()).unwrap() = Transform {
