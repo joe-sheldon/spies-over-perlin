@@ -6,7 +6,7 @@ use bevy::math::Affine3A;
 use bevy::prelude::*;
 use bevy::reflect::List;
 use bevy::tasks::futures_lite::StreamExt;
-use bevy_panorbit_camera::{PanOrbitCamera, PanOrbitCameraPlugin};
+use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
 use rand::prelude::*;
 
 use crate::terrain::{
@@ -20,11 +20,11 @@ fn main() {
         .init_resource::<Game>()
         .insert_resource(ClearColor(SKY_COLOR))
         .add_plugins(DefaultPlugins)
-        .add_plugins(PanOrbitCameraPlugin)
+        .add_plugins(LookTransformPlugin)
         .add_systems(Startup, setup)
         .add_systems(Update, (
             move_player,
-            update_camera,
+            move_camera_system,
         ))
         .run();
 }
@@ -57,8 +57,6 @@ struct Game {
     world_mesh: Vec<Vec3>,
     city_centers: Vec<Vec3>,
     player: Player,
-    camera_should_focus: Vec3,
-    camera_is_focus: Vec3,
 }
 
 
@@ -183,8 +181,6 @@ fn setup(
 
     // Player Setup
     game.player.loc = Vec3::new(WORLD_SIZE_X / 2.0, PLAYER_INITIAL_HEIGHT, WORLD_SIZE_Z / 2.0);
-    game.camera_should_focus = game.player.loc.clone();
-    game.camera_is_focus = game.player.loc.clone();
     game.player.forward = Vec3::Z;
     game.player.vel = 5.0;
     game.player.move_cooldown = Timer::from_seconds(0.1, TimerMode::Once);
@@ -200,28 +196,32 @@ fn setup(
             .id(),
     );
 
+    let target = game.player.loc;
+    let eye = Vec3::new(
+        target.x,
+        target.y + 25.0,
+        target.z - 25.0
+    );
 
-    // // Pan-Orbit camera around player (for now)
-    // commands.spawn((
-    //     Transform::from_translation(game.player.loc),
-    //     PanOrbitCamera::default(),
-    // ));
+    commands
+        .spawn(LookTransformBundle {
+            transform: LookTransform::new(eye, target, Vec3::Y),
+            smoother: Smoother::new(0.9), // Value between 0.0 and 1.0, higher is smoother.
+        }).insert(Camera3d::default());
+}
 
-    commands.spawn((
-        Camera3d::default(),
-        Projection::Perspective(PerspectiveProjection {
-            fov: std::f32::consts::FRAC_PI_2, // 90 degrees in radians
-            ..default()
-        }),
-        Transform::from_xyz(
-            game.camera_is_focus.x,
-            game.camera_is_focus.y + 25.0,
-            game.camera_is_focus.z - 25.0
-        )
-            .looking_at(game.camera_is_focus, Vec3::Y),
-    ));
-
-
+fn move_camera_system(mut cameras: Query<&mut LookTransform>, mut game: ResMut<Game>) {
+    // Later, another system will update the `Transform` and apply smoothing automatically.
+    for mut c in cameras.iter_mut() {
+        let ploc = game.player.loc.clone();
+        c.target = ploc;
+        c.eye = Vec3::new(
+            ploc.x,
+            ploc.y + 25.0,
+            ploc.z - 25.0
+        );
+        c.up = Vec3::Y;
+    }
 }
 
 fn move_player(
@@ -269,35 +269,5 @@ fn move_player(
             rotation: rot,
             ..default()
         };
-
-        game.camera_should_focus = game.player.loc.clone();
-    }
-}
-
-fn update_camera(
-    time: Res<Time>,
-    mut game: ResMut<Game>,
-    mut transforms: ParamSet<(Query<&mut Transform, With<Camera3d>>, Query<&Transform>)>,
-) {
-
-    // let mut camera_motion = game.camera_is_focus - game.camera_should_focus;
-    // if camera_motion.length() > 0.2 {
-    //     camera_motion *= 2.0 * time.delta_secs();
-    //     game.camera_is_focus += camera_motion;
-    // } else {
-    //     game.camera_is_focus = game.camera_should_focus;
-    // }
-
-    game.camera_is_focus = game.camera_should_focus;
-
-
-    for mut transform in transforms.p0().iter_mut() {
-        *transform = transform.looking_at(game.camera_is_focus, Vec3::Y).with_translation(
-            Vec3::new(
-                game.camera_is_focus.x,
-                game.camera_is_focus.y + 25.0,
-                game.camera_is_focus.z - 25.0
-            )
-        );
     }
 }

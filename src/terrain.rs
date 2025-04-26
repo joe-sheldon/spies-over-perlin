@@ -96,19 +96,10 @@ pub fn generate_terrain_triangle_strips_from_vertices(
 }
 
 fn compute_normals(coordinates: Vec<Vec3>, indices: Vec<u32>) -> Vec<Vec3> {
-    // This is to be determined how to best go about backfilling normals for each coordinate.
-    // This can be manually solved but there may be a way to automatically do it.
     let mut normals: Vec<Vec3> = Vec::new();
-
-    // let n_tris = 2 * divisions_x - 2;
-    // for tri in 0..n_tris {
-    //
-    // }
-
     for coordinates in coordinates {
-        normals.push(Vec3::new(0.0, 1.0, 0.0))
+        normals.push(Vec3::Y)
     }
-
 
     normals
 }
