@@ -6,8 +6,9 @@ use bevy::math::Affine3A;
 use bevy::prelude::*;
 use bevy::reflect::List;
 use bevy::tasks::futures_lite::StreamExt;
+use rand::Rng;
 use smooth_bevy_cameras::{LookTransform, LookTransformBundle, LookTransformPlugin, Smoother};
-use rand::prelude::*;
+
 
 use crate::terrain::{
     generate_terrain_mesh_strips, generate_terrain_triangle_strips_from_vertices,
@@ -214,12 +215,13 @@ fn setup(
 fn move_camera_system(mut cameras: Query<&mut LookTransform>, mut game: ResMut<Game>) {
     // Later, another system will update the `Transform` and apply smoothing automatically.
     for mut c in cameras.iter_mut() {
-        let ploc = game.player.loc.clone();
+        let ploc = game.player.loc;
+        let pfwd = game.player.forward;
         c.target = ploc;
         c.eye = Vec3::new(
-            ploc.x,
+            ploc.x - 50.0 * pfwd.x,
             ploc.y + 25.0,
-            ploc.z - 25.0
+            ploc.z - 50.0 * pfwd.z
         );
         c.up = Vec3::Y;
     }
