@@ -22,8 +22,10 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugins(LookTransformPlugin)
         .add_systems(Startup, setup)
+        .add_systems(FixedUpdate, (
+            move_player
+        ))
         .add_systems(Update, (
-            move_player,
             move_camera_system,
         ))
         .run();
@@ -105,7 +107,6 @@ fn setup(
     for t_mesh in generate_terrain_mesh_strips(&t_coords, &t_strips).unwrap() {
         commands.spawn((
             Mesh3d(meshes.add(t_mesh)),
-            // MeshMaterial3d(materials.add(rando_color())),
             MeshMaterial3d(materials.add(TERRAIN_COLOR)),
             Terrain,
         ));
@@ -232,7 +233,6 @@ fn move_player(
     time: Res<Time>,
 ) {
     if game.player.move_cooldown.tick(time.delta()).finished() {
-        let mut turned = false;
         let mut rot = Quat::IDENTITY;
 
         if keyboard_input.pressed(KeyCode::ArrowUp) {
@@ -251,13 +251,19 @@ fn move_player(
             rot = Affine3A::from_rotation_y(-PLAYER_ROTATION_SPEED).to_scale_rotation_translation().1;
             game.player.forward = rot * game.player.forward;
             println!("Turn Right: {:?}", game.player.forward);
-            turned = true;
         }
         if keyboard_input.pressed(KeyCode::ArrowLeft) {
             rot = Affine3A::from_rotation_y(PLAYER_ROTATION_SPEED).to_scale_rotation_translation().1;
             game.player.forward = rot * game.player.forward;
             println!("Turn Left: {:?}", game.player.forward);
-            turned = true;
+        }
+        if keyboard_input.pressed(KeyCode::ShiftLeft) {
+            game.player.loc.y = game.player.loc.y - 1.0;
+            println!("Lowered: {:?}", game.player.loc);
+        }
+        if keyboard_input.pressed(KeyCode::Space) {
+            game.player.loc.y = game.player.loc.y + 1.0;
+            println!("Raised: {:?}", game.player.loc);
         }
 
         // Tick velocity up by vel vector
