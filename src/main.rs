@@ -232,6 +232,8 @@ fn move_player(
     mut transforms: Query<&mut Transform>,
     time: Res<Time>,
 ) {
+    //TODO https://bevy-cheatbook.github.io/cookbook/smooth-movement.html
+
     if game.player.move_cooldown.tick(time.delta()).finished() {
         let mut rot = Quat::IDENTITY;
 
